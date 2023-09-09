@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 
-import Profile from '@components/profile'
 import { useRouter } from 'next/navigation'
+import Profile from '@components/Profile'
 
-function MyProfile(props) {
+function MyProfile() {
   const { data: session } = useSession()
   const router = useRouter()
 
