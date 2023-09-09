@@ -1,67 +1,96 @@
-import Link from 'next/link'
+'use client'
 
-const Form = ({ type, post, setPost, submitting, handleSubmit }) => {
+import { useEffect, useState } from 'react'
+
+import PromptCard from './PromptCard'
+
+const PromptCardList = ({ data, handleTagClick }) => {
   return (
-    <section className='w-full max-w-full flex-start flex-col'>
-      <h1 className='head_text text-left'>
-        <span className='blue_gradient'>{type} Post</span>
-      </h1>
-      <p className='desc text-left max-w-md'>
-        {type} and share amazing prompts with the world, and let your
-        imagination run wild with any AI-powered platform
-      </p>
+    <div className='mt-16 prompt_layout'>
+      {data.map((post) => (
+        <PromptCard
+          key={post._id}
+          post={post}
+          handleTagClick={handleTagClick}
+        />
+      ))}
+    </div>
+  )
+}
 
-      <form
-        onSubmit={handleSubmit}
-        className='mt-10 w-full max-w-2xl flex flex-col gap-7 glassmorphism'
-      >
-        <label>
-          <span className='font-satoshi font-semibold text-base text-gray-700'>
-            Your AI Prompt
-          </span>
+const Feed = () => {
+  const [allPosts, setAllPosts] = useState([])
 
-          <textarea
-            value={post.prompt}
-            onChange={(e) => setPost({ ...post, prompt: e.target.value })}
-            placeholder='Write your post here'
-            required
-            className='form_textarea '
-          />
-        </label>
+  // Search states
+  const [searchText, setSearchText] = useState('')
+  const [searchTimeout, setSearchTimeout] = useState(null)
+  const [searchedResults, setSearchedResults] = useState([])
 
-        <label>
-          <span className='font-satoshi font-semibold text-base text-gray-700'>
-            Field of Prompt{' '}
-            <span className='font-normal'>
-              (#product, #webdevelopment, #idea, etc.)
-            </span>
-          </span>
-          <input
-            value={post.tag}
-            onChange={(e) => setPost({ ...post, tag: e.target.value })}
-            type='text'
-            placeholder='#Tag'
-            required
-            className='form_input'
-          />
-        </label>
+  const fetchPosts = async () => {
+    const response = await fetch('/api/prompt')
+    const data = await response.json()
 
-        <div className='flex-end mx-3 mb-5 gap-4'>
-          <Link href='/' className='text-gray-500 text-sm'>
-            Cancel
-          </Link>
+    setAllPosts(data)
+  }
 
-          <button
-            type='submit'
-            disabled={submitting}
-            className='px-5 py-1.5 text-sm bg-primary-orange rounded-full text-white'
-          >
-            {submitting ? `${type}ing...` : type}
-          </button>
-        </div>
+  useEffect(() => {
+    fetchPosts()
+  }, [])
+
+  const filterPrompts = (searchtext) => {
+    const regex = new RegExp(searchtext, 'i') // 'i' flag for case-insensitive search
+    return allPosts.filter(
+      (item) =>
+        regex.test(item.creator.username) ||
+        regex.test(item.tag) ||
+        regex.test(item.prompt),
+    )
+  }
+
+  const handleSearchChange = (e) => {
+    clearTimeout(searchTimeout)
+    setSearchText(e.target.value)
+
+    // debounce method
+    setSearchTimeout(
+      setTimeout(() => {
+        const searchResult = filterPrompts(e.target.value)
+        setSearchedResults(searchResult)
+      }, 500),
+    )
+  }
+
+  const handleTagClick = (tagName) => {
+    setSearchText(tagName)
+
+    const searchResult = filterPrompts(tagName)
+    setSearchedResults(searchResult)
+  }
+
+  return (
+    <section className='feed'>
+      <form className='relative w-full flex-center'>
+        <input
+          type='text'
+          placeholder='Search for a tag or a username'
+          value={searchText}
+          onChange={handleSearchChange}
+          required
+          className='search_input peer'
+        />
       </form>
+
+      {/* All Prompts */}
+      {searchText ? (
+        <PromptCardList
+          data={searchedResults}
+          handleTagClick={handleTagClick}
+        />
+      ) : (
+        <PromptCardList data={allPosts} handleTagClick={handleTagClick} />
+      )}
     </section>
   )
 }
 
-export default Form
+export default Feed
