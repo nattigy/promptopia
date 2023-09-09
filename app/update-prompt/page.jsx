@@ -1,21 +1,17 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+
 import Form from '@components/Form'
 
-const EditPrompt = () => {
-  // const { data: session } = useSession()
+const UpdatePrompt = () => {
   const router = useRouter()
-
   const searchParams = useSearchParams()
   const promptId = searchParams.get('id')
 
-  const [submitting, setSubmitting] = useState(false)
-  const [post, setPost] = useState({
-    prompt: '',
-    tag: '',
-  })
+  const [post, setPost] = useState({ prompt: '', tag: '' })
+  const [submitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const getPromptDetails = async () => {
@@ -28,14 +24,15 @@ const EditPrompt = () => {
       })
     }
 
-    if(promptId) getPromptDetails().then()
+    if (promptId) getPromptDetails().then()
   }, [promptId])
 
   const updatePrompt = async (e) => {
     e.preventDefault()
-    setSubmitting(true)
+    setIsSubmitting(true)
 
-    if(!promptId) return alert('Prompt ID not found')
+    if (!promptId) return alert('Missing PromptId!')
+
     try {
       const response = await fetch(`/api/prompt/${promptId}`, {
         method: 'PATCH',
@@ -45,13 +42,13 @@ const EditPrompt = () => {
         }),
       })
 
-      if(response.ok){
-        router.push("/")
+      if (response.ok) {
+        router.push('/')
       }
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      console.log(error)
     } finally {
-      setSubmitting(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -66,4 +63,4 @@ const EditPrompt = () => {
   )
 }
 
-export default EditPrompt
+export default UpdatePrompt
